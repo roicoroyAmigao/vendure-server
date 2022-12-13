@@ -10,6 +10,7 @@ import { AdminUiPlugin } from '@vendure/admin-ui-plugin';
 import 'dotenv/config';
 import path from 'path';
 import { StripePlugin } from '@vendure/payments-plugin/package/stripe';
+import { customAdminUi } from './compile-admin-ui';
 
 const IS_DEV = process.env.APP_ENV === 'dev';
 
@@ -18,9 +19,6 @@ export const config: VendureConfig = {
         port: 3000,
         adminApiPath: 'admin-api',
         shopApiPath: 'shop-api',
-        // The following options are useful in development mode,
-        // but are best turned off for production for security
-        // reasons.
         ...(IS_DEV ? {
             adminApiPlayground: {
                 settings: { 'request.credentials': 'include' } as any,
@@ -33,7 +31,7 @@ export const config: VendureConfig = {
         } : {}),
     },
     authOptions: {
-        tokenMethod: ['bearer', 'cookie'],
+        tokenMethod: ['bearer'],
         superadminCredentials: {
             identifier: process.env.SUPERADMIN_USERNAME,
             password: process.env.SUPERADMIN_PASSWORD,
@@ -41,11 +39,10 @@ export const config: VendureConfig = {
         cookieOptions: {
           secret: process.env.COOKIE_SECRET,
         },
+        requireVerification: false,
     },
     dbConnectionOptions: {
         type: 'postgres',
-        // See the README.md "Migrations" section for an explanation of
-        // the `synchronize` and `migrations` options.
         synchronize: false,
         migrations: [path.join(__dirname, './migrations/*.+(js|ts)')],
         logging: false,
@@ -97,6 +94,7 @@ export const config: VendureConfig = {
         AdminUiPlugin.init({
             route: 'admin',
             port: 3002,
+            app: customAdminUi({ recompile: !IS_DEV, devMode: !IS_DEV }),
         }),
     ],
 };
